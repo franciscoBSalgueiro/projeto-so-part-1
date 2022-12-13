@@ -242,21 +242,33 @@ int tfs_unlink(char const *target) {
 }
 
 int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
-    FILE* f = fopen(source_path, "r");
-    if (f == NULL) {
+    FILE* src_file = fopen(source_path, "r");
+    if (src_file == NULL) {
         return -1;
     }
+
+    int dest_file = tfs_open(dest_path, TFS_O_CREAT | TFS_O_TRUNC);
+    if (dest_file == -1) {
+        return -1;
+    }
+
     char buffer[state_block_size()];
+    size_t read_bytes;
 
-    fread(buffer, sizeof(buffer), 1, f);
-    fclose(f);
-
-    int fd = tfs_open(dest_path, TFS_O_CREAT | TFS_O_TRUNC);
-    if (fd == -1) {
+    while ((read_bytes = fread(buffer, 1, state_block_size(), src_file)) > 0) {
+        if (tfs_write(dest_file, buffer, read_bytes) != read_bytes) {
+            fclose(src_file);
+            tfs_close(dest_file);
+            return -1;
+        }
+    }
+    
+    if (fclose(src_file) != 0) {
+        tfs_close(dest_file);
         return -1;
     }
-
-    tfs_write(fd, buffer, strlen(buffer));
-    tfs_close(fd);
+    if (tfs_close(dest_file) != 0) {
+        return -1;
+    }
     return 0;
 }
