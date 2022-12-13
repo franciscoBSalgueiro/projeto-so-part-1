@@ -142,12 +142,33 @@ int tfs_sym_link(char const *target, char const *link_name) {
 }
 
 int tfs_link(char const *target, char const *link_name) {
-    (void)target;
-    (void)link_name;
-    // ^ this is a trick to keep the compiler from complaining about unused
-    // variables. TODO: remove
+    // Checks if the path names are valid
+    if (!valid_pathname(link_name) || !valid_pathname(target)) {
+        return -1;
+    }
 
-    PANIC("TODO: tfs_link");
+    inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
+    ALWAYS_ASSERT(root_dir_inode != NULL,
+                  "tfs_link: root dir inode must exist");
+    int target_inum = tfs_lookup(target, root_dir_inode);
+    // Checks if the target file exists
+    if (target_inum < 0) {
+        return -1;
+    }
+
+    inode_t *target_inode = inode_get(target_inum);
+    ALWAYS_ASSERT(target_inode != NULL,
+                  "tfs_link: target file must have an inode");
+    
+    // Checks if the link file already exists
+    int link_inum = tfs_lookup(link_name, root_dir_inode);
+    if (link_inum >= 0) {
+        return -1;
+    }
+
+    add_dir_entry(root_dir_inode, link_name + 1, target_inum);
+    target_inode->i_link_count++;
+    return 0;
 }
 
 int tfs_close(int fhandle) {
@@ -234,11 +255,35 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len) {
 }
 
 int tfs_unlink(char const *target) {
-    (void)target;
-    // ^ this is a trick to keep the compiler from complaining about unused
-    // variables. TODO: remove
+    // Checks if the path name is valid
+    if (!valid_pathname(target)) {
+        return -1;
+    }
 
-    PANIC("TODO: tfs_unlink");
+    inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
+    ALWAYS_ASSERT(root_dir_inode != NULL,
+                  "tfs_unlink: root dir inode must exist");
+    int target_inum = tfs_lookup(target, root_dir_inode);
+    // Checks if the target file exists
+    if (target_inum < 0) {
+        return -1;
+    }
+
+    inode_t *target_inode = inode_get(target_inum);
+    ALWAYS_ASSERT(target_inode != NULL,
+                  "tfs_unlink: target file must have an inode");
+
+    // unlink the file (only for hard links for now)
+    if (target_inode->i_link_count > 1) {
+        target_inode->i_link_count--;
+        clear_dir_entry(root_dir_inode, target + 1);
+        if (target_inode->i_link_count == 0) {
+            data_block_free(target_inode->i_data_block);
+            inode_delete(target_inum);
+        }
+    }
+
+    return 0;
 }
 
 int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
