@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "prettyprint.h"
+
 int main() {
     const char *file_path = "/f1";
     const char *link_path = "/l1";
@@ -36,5 +38,5 @@ int main() {
     // Link usable again - target was recreated
     assert(tfs_open(link_path, TFS_O_APPEND) != -1);
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 }

@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "prettyprint.h"
+
 #define PATH_FORMAT "/f%ld_%ld"
 #define FILE_COUNT 5
 #define MAX_PATH_SIZE 32
@@ -130,7 +132,7 @@ int main() {
         run_test(rep);
     }
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 
     return 0;
 }

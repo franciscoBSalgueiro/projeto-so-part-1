@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "prettyprint.h"
+
 int main() {
     char *path1 = "/f1";
 
@@ -19,7 +21,7 @@ int main() {
 
     // TODO: add more failure scenarios
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 
     return 0;
 }

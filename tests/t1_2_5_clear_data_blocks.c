@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "prettyprint.h"
+
 uint8_t const file_contents[] = "AAA!";
 char const target_path1[] = "/f1";
 char const target_path2[] = "/f2";
@@ -91,7 +93,7 @@ int main() {
     // destroy TécnicoFS
     assert(tfs_destroy() != -1);
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 
     return 0;
 }

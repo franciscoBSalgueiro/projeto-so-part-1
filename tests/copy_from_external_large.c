@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "prettyprint.h"
+
 int main() {
 
     char *str_ext_file =
@@ -33,7 +35,7 @@ int main() {
     assert(r == strlen(str_ext_file));
     assert(!memcmp(buffer, str_ext_file, strlen(str_ext_file)));
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 
     return 0;
 }

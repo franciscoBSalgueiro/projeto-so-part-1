@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "prettyprint.h"
+
 int main() {
     const char *file_path = "/f1";
     const char *link_path = "/l1";
@@ -34,5 +36,5 @@ int main() {
     assert(tfs_read(fd, read_contents, sizeof(read_contents)) != -1);
     assert(strcmp(read_contents, write_contents) == 0);
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 }

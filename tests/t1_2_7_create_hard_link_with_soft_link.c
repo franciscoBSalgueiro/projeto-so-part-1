@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "prettyprint.h"
+
 char const target_path1[] = "/f1";
 char const link_path1[] = "/l1";
 char const link_path2[] = "/l2";
@@ -28,7 +30,7 @@ int main() {
     // destroy TécnicoFS
     assert(tfs_destroy() != -1);
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 
     return 0;
 }

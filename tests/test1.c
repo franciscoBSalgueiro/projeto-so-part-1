@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "prettyprint.h"
+
 int main() {
 
     char *str = "AAA!";
@@ -33,7 +35,7 @@ int main() {
 
     assert(tfs_close(f) != -1);
 
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 
     return 0;
 }
