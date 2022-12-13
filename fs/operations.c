@@ -263,11 +263,11 @@ int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
         }
     }
     
-    if (fclose(src_file) != 0) {
+    if (fclose(src_file) == EOF) {
         tfs_close(dest_file);
         return -1;
     }
-    if (tfs_close(dest_file) != 0) {
+    if (tfs_close(dest_file) == -1) {
         return -1;
     }
     return 0;
