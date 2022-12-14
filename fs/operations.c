@@ -91,6 +91,20 @@ int tfs_open(char const *name, tfs_file_mode_t mode) {
         ALWAYS_ASSERT(inode != NULL,
                       "tfs_open: directory files must have an inode");
 
+        if (inode->i_node_type == T_LINK) {
+            char *target = (char *)data_block_get(inode->i_data_block);
+            ALWAYS_ASSERT(valid_pathname(target),
+                          "tfs_open: symlink name must be valid");
+            int target_inum = tfs_lookup(target, root_dir_inode);
+            if (target_inum == -1) {
+                return -1;
+            }
+            inum = target_inum;
+            inode = inode_get(inum);
+            ALWAYS_ASSERT(inode != NULL,
+                          "tfs_open: directory files must have an inode");
+        }
+
         // Truncate (if requested)
         if (mode & TFS_O_TRUNC) {
             if (inode->i_size > 0) {
@@ -133,12 +147,38 @@ int tfs_open(char const *name, tfs_file_mode_t mode) {
 }
 
 int tfs_sym_link(char const *target, char const *link_name) {
-    (void)target;
-    (void)link_name;
-    // ^ this is a trick to keep the compiler from complaining about unused
-    // variables. TODO: remove
+    // Checks if the path names are valid
+    if (!valid_pathname(link_name) && !valid_pathname(target)) {
+        return -1;
+    }
 
-    PANIC("TODO: tfs_sym_link");
+    inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
+    ALWAYS_ASSERT(root_dir_inode != NULL,
+                  "tfs_sym_link: root inode must exist");
+
+    int link_inum = inode_create(T_LINK);
+    if (link_inum == -1) {
+        return -1;
+    }
+
+    inode_t *link_inode = inode_get(link_inum);
+    ALWAYS_ASSERT(link_inode != NULL,
+                  "tfs_sym_link: inode of open file deleted");
+
+    int bnum = data_block_alloc();
+    if (bnum == -1) {
+        return -1; // no space
+    }
+
+    link_inode->i_data_block = bnum;
+
+    void *block = data_block_get(link_inode->i_data_block);
+    ALWAYS_ASSERT(block != NULL, "tfs_sym_link: data block deleted mid-write");
+
+    memcpy(block, target, strlen(target) + 1);
+
+    add_dir_entry(root_dir_inode, link_name + 1, link_inum);
+    return 0;
 }
 
 int tfs_link(char const *target, char const *link_name) {
@@ -159,7 +199,11 @@ int tfs_link(char const *target, char const *link_name) {
     inode_t *target_inode = inode_get(target_inum);
     ALWAYS_ASSERT(target_inode != NULL,
                   "tfs_link: target file must have an inode");
-    
+
+    if (target_inode->i_node_type == T_LINK) {
+        return -1;
+    }
+
     // Checks if the link file already exists
     int link_inum = tfs_lookup(link_name, root_dir_inode);
     if (link_inum >= 0) {
@@ -273,21 +317,23 @@ int tfs_unlink(char const *target) {
     ALWAYS_ASSERT(target_inode != NULL,
                   "tfs_unlink: target file must have an inode");
 
-    // unlink the file (only for hard links for now)
-    if (target_inode->i_link_count > 1) {
+    // unlink the file
+    if (target_inode->i_link_count >= 1) {
         target_inode->i_link_count--;
         clear_dir_entry(root_dir_inode, target + 1);
-        if (target_inode->i_link_count == 0) {
+    }
+    // delete the file if it is not linked to any other file
+    if (target_inode->i_link_count == 0) {
+        if (target_inode->i_data_block != -1)
             data_block_free(target_inode->i_data_block);
-            inode_delete(target_inum);
-        }
+        inode_delete(target_inum);
     }
 
     return 0;
 }
 
 int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
-    FILE* src_file = fopen(source_path, "r");
+    FILE *src_file = fopen(source_path, "r");
     if (src_file == NULL) {
         return -1;
     }
@@ -307,7 +353,7 @@ int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
             return -1;
         }
     }
-    
+
     if (fclose(src_file) == EOF) {
         tfs_close(dest_file);
         return -1;
