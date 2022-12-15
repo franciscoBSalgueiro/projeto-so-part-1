@@ -28,7 +28,7 @@ CFLAGS += $(INCLUDES)
 # Warnings
 CFLAGS += -fdiagnostics-color=always -Wall -Werror -Wextra -Wcast-align -Wconversion -Wfloat-equal -Wformat=2 -Wnull-dereference -Wshadow -Wsign-conversion -Wswitch-default -Wswitch-enum -Wundef -Wunreachable-code -Wunused
 # Warning suppressions
-CFLAGS += -Wno-sign-compare
+CFLAGS += -Wno-sign-compare -fsanitize=thread
 
 # optional debug symbols: run make DEBUG=no to deactivate them
 ifneq ($(strip $(DEBUG)), no)

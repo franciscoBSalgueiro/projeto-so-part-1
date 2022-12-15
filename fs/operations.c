@@ -8,6 +8,8 @@
 
 #include "betterassert.h"
 
+static pthread_mutex_t tfs_open_mutex;
+
 tfs_params tfs_default_params() {
     tfs_params params = {
         .max_inode_count = 64,
@@ -20,6 +22,8 @@ tfs_params tfs_default_params() {
 
 int tfs_init(tfs_params const *params_ptr) {
     tfs_params params;
+    pthread_mutex_init(&tfs_open_mutex, NULL);
+
     if (params_ptr != NULL) {
         params = *params_ptr;
     } else {
@@ -82,19 +86,29 @@ int tfs_open(char const *name, tfs_file_mode_t mode) {
     inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
     ALWAYS_ASSERT(root_dir_inode != NULL,
                   "tfs_open: root dir inode must exist");
+
+    // We need to ensure that while we check is the file exists there isn't
+    // another one being created
+    pthread_mutex_lock(&tfs_open_mutex);
     int inum = tfs_lookup(name, root_dir_inode);
     size_t offset;
 
     if (inum >= 0) {
+        pthread_mutex_unlock(&tfs_open_mutex);
+
         // The file already exists
         inode_t *inode = inode_get(inum);
         ALWAYS_ASSERT(inode != NULL,
                       "tfs_open: directory files must have an inode");
 
+        // if we're opening a soft link
         if (inode->i_node_type == T_LINK) {
+            // get the target pahtname to open it
             char *target = (char *)data_block_get(inode->i_data_block);
             ALWAYS_ASSERT(valid_pathname(target),
                           "tfs_open: symlink name must be valid");
+
+            // checks if the file exists
             int target_inum = tfs_lookup(target, root_dir_inode);
             if (target_inum == -1) {
                 return -1;
@@ -123,17 +137,21 @@ int tfs_open(char const *name, tfs_file_mode_t mode) {
         // Create inode
         inum = inode_create(T_FILE);
         if (inum == -1) {
+            pthread_mutex_unlock(&tfs_open_mutex);
             return -1; // no space in inode table
         }
 
         // Add entry in the root directory
         if (add_dir_entry(root_dir_inode, name + 1, inum) == -1) {
             inode_delete(inum);
+            pthread_mutex_unlock(&tfs_open_mutex);
             return -1; // no space in directory
         }
 
+        pthread_mutex_unlock(&tfs_open_mutex);
         offset = 0;
     } else {
+        pthread_mutex_unlock(&tfs_open_mutex);
         return -1;
     }
 
@@ -156,6 +174,7 @@ int tfs_sym_link(char const *target, char const *link_name) {
     ALWAYS_ASSERT(root_dir_inode != NULL,
                   "tfs_sym_link: root inode must exist");
 
+    // Creates the inode for the soft link
     int link_inum = inode_create(T_LINK);
     if (link_inum == -1) {
         return -1;
@@ -165,6 +184,7 @@ int tfs_sym_link(char const *target, char const *link_name) {
     ALWAYS_ASSERT(link_inode != NULL,
                   "tfs_sym_link: inode of open file deleted");
 
+    // Allocates a data block and assigns it to the inode
     int bnum = data_block_alloc();
     if (bnum == -1) {
         return -1; // no space
@@ -175,6 +195,7 @@ int tfs_sym_link(char const *target, char const *link_name) {
     void *block = data_block_get(link_inode->i_data_block);
     ALWAYS_ASSERT(block != NULL, "tfs_sym_link: data block deleted mid-write");
 
+    // Copies hte target pathname to the actal data block
     memcpy(block, target, strlen(target) + 1);
 
     add_dir_entry(root_dir_inode, link_name + 1, link_inum);
