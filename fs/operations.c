@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pthread.h"
 #include "betterassert.h"
 
 static pthread_mutex_t tfs_open_mutex;
