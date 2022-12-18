@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "state.h"
 #include "betterassert.h"
+#include "utils.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -30,6 +31,7 @@ static allocation_state_t *free_blocks;
  */
 static open_file_entry_t *open_file_table;
 static allocation_state_t *free_open_file_entries;
+static pthread_mutex_t mutex_locker;
 
 // Convenience macros
 #define INODE_TABLE_SIZE (fs_params.max_inode_count)
@@ -102,7 +104,9 @@ int state_init(tfs_params params) {
         return -1; // already initialized
     }
 
+    
     pthread_rwlock_init(&inode_locker, NULL);
+    pthread_mutex_init(&mutex_locker, NULL);
 
     inode_table = malloc(INODE_TABLE_SIZE * sizeof(inode_t));
     freeinode_ts = malloc(INODE_TABLE_SIZE * sizeof(allocation_state_t));
@@ -140,6 +144,7 @@ int state_init(tfs_params params) {
 int state_destroy(void) {
 
     pthread_rwlock_destroy(&inode_locker);
+    pthread_mutex_destroy(&mutex_locker);
 
     free(inode_table);
     free(freeinode_ts);
@@ -464,6 +469,7 @@ int find_in_dir(inode_t const *inode, char const *sub_name) {
  *   - No free data blocks.
  */
 int data_block_alloc(void) {
+    //pthread_rwlock_rdlock(&inode_locker);
 
     for (size_t i = 0; i < DATA_BLOCKS; i++) {
         if (i * sizeof(allocation_state_t) % BLOCK_SIZE == 0) {
@@ -471,11 +477,16 @@ int data_block_alloc(void) {
         }
 
         if (free_blocks[i] == FREE) {
+            //pthread_rwlock_unlock(&inode_locker);
+            //pthread_rwlock_wrlock(&inode_locker);
             free_blocks[i] = TAKEN;
 
+            //pthread_rwlock_unlock(&inode_locker);
             return (int)i;
         }
     }
+
+    //pthread_rwlock_unlock(&inode_locker);
 
     return -1;
 }
@@ -524,16 +535,18 @@ void *data_block_get(int block_number) {
  *   - No space in open file table for a new open file.
  */
 int add_to_open_file_table(int inumber, size_t offset) {
+    pthread_mutex_lock(&mutex_locker);
     for (int i = 0; i < MAX_OPEN_FILES; i++) {
         if (free_open_file_entries[i] == FREE) {
             free_open_file_entries[i] = TAKEN;
             open_file_table[i].of_inumber = inumber;
             open_file_table[i].of_offset = offset;
-
+            
+            pthread_mutex_unlock(&mutex_locker);
             return i;
         }
     }
-
+    pthread_mutex_unlock(&mutex_locker);
     return -1;
 }
 
@@ -544,6 +557,7 @@ int add_to_open_file_table(int inumber, size_t offset) {
  *   - fhandle: file handle to free/close
  */
 void remove_from_open_file_table(int fhandle) {
+    pthread_mutex_lock(&mutex_locker);
 
     ALWAYS_ASSERT(valid_file_handle(fhandle),
                   "remove_from_open_file_table: file handle must be valid");
@@ -552,6 +566,7 @@ void remove_from_open_file_table(int fhandle) {
                   "remove_from_open_file_table: file handle must be taken");
 
     free_open_file_entries[fhandle] = FREE;
+    pthread_mutex_unlock(&mutex_locker);
 }
 
 /**
