@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "prettyprint.h"
+
 #define FILE_NAME_MAX_LEN 10
 #define THREAD_COUNT 2
 #define FILES_TO_CREATE_PER_THREAD 10
@@ -53,7 +55,7 @@ int main() {
     }
 
     tfs_destroy();
-    printf("Successful test.\n");
+    PRINT_GREEN("Successful test.\n");
 
     return 0;
 }
