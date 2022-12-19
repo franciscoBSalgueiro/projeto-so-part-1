@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include "state.h"
 #include "betterassert.h"
-#include "utils.c"
+#include "utils.h"
 
 #include <stdbool.h>
 #include <stdio.h>

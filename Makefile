@@ -82,7 +82,7 @@ fmt: $(SOURCES) $(HEADERS)
 	$(CLANG_FORMAT) -i $^
 
 # Add dependency of target executables in TécnicoFS (to be linked with it)
-$(TARGET_EXECS): fs/operations.o fs/state.o
+$(TARGET_EXECS): fs/operations.o fs/state.o fs/utils.o
 # ^ Note the lack of a rule.
 # make uses a set of default rules, one of which compiles C binaries
 # the CC, LD, CFLAGS and LDFLAGS are used in this rule
