@@ -8,7 +8,7 @@
 
 #define NUM_THREADS 2
 #define NUM_OF_LINKS 10
-#define FILE_TO_CREATE_PER_THREAD 10
+#define FILE_TO_CREATE_PER_THREAD 5
 #define FILE_NAME_MAX_LEN 10
 
 void *create_file(void* args) {
@@ -35,7 +35,6 @@ void *create_file(void* args) {
 }
 
 int main() {
-
     pthread_t threads[NUM_THREADS];
     assert(tfs_init(NULL) != -1);
     int table[NUM_THREADS];

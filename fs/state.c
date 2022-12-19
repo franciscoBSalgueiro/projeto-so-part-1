@@ -584,6 +584,23 @@ void remove_from_open_file_table(int fhandle) {
     mutex_unlock(&open_file_mutex);
 }
 
+int inumber_is_open(int inumber) {
+    mutex_lock(&open_file_mutex);
+    for (int i = 0; i < MAX_OPEN_FILES; i++) {
+        if (free_open_file_entries[i] == TAKEN) {
+            mutex_lock(&open_file_table[i].lock);
+            if (open_file_table[i].of_inumber == inumber) {
+                mutex_unlock(&open_file_table[i].lock);
+                mutex_unlock(&open_file_mutex);
+                return 1;
+            }
+            mutex_unlock(&open_file_table[i].lock);
+        }
+    }
+    mutex_unlock(&open_file_mutex);
+    return 0;
+}
+
 /**
  * Obtain pointer to a given entry in the open file table.
  *

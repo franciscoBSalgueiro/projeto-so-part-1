@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pthread.h"
 #include "betterassert.h"
+#include "pthread.h"
 
 static pthread_mutex_t tfs_open_mutex;
 
@@ -75,8 +75,7 @@ static int tfs_lookup(char const *name) {
     }
 
     inode_t *root_inode = inode_get(ROOT_DIR_INUM);
-    ALWAYS_ASSERT(root_inode != NULL,
-                  "tfs_open: root dir inode must exist");
+    ALWAYS_ASSERT(root_inode != NULL, "tfs_open: root dir inode must exist");
 
     // skip the initial '/' character
     name++;
@@ -342,8 +341,13 @@ int tfs_unlink(char const *target) {
     ALWAYS_ASSERT(root_dir_inode != NULL,
                   "tfs_unlink: root dir inode must exist");
     int target_inum = tfs_lookup(target);
+
     // Checks if the target file exists
     if (target_inum < 0) {
+        return -1;
+    }
+
+    if (inumber_is_open(target_inum)) {
         return -1;
     }
 
@@ -356,6 +360,7 @@ int tfs_unlink(char const *target) {
         target_inode->i_link_count--;
         clear_dir_entry(root_dir_inode, target + 1);
     }
+
     // delete the file if it is not linked to any other file
     if (target_inode->i_link_count == 0) {
         if (target_inode->i_data_block != -1)

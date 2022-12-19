@@ -13,7 +13,7 @@
 #include "prettyprint.h"
 
 #define TFS_FILE "/f1"
-#define THREAD_COUNT 20
+#define THREAD_COUNT 10
 
 void *create_file(void *arg);
 void assert_file_has_correct_content();

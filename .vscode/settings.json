@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "operations.h": "c",
+        "*.tcc": "c",
+        "fstream": "c"
+    }
+}
