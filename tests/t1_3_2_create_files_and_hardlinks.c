@@ -1,8 +1,8 @@
 #include "fs/operations.h"
 #include <assert.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
-#include <pthread.h>
 
 #include "prettyprint.h"
 
@@ -11,14 +11,14 @@
 #define FILE_TO_CREATE_PER_THREAD 5
 #define FILE_NAME_MAX_LEN 10
 
-void *create_file(void* args) {
+void *create_file(void *args) {
     int file = *((int *)args);
 
     // Create 5 files and 5 hard links to them
     for (int i = 0; i < FILE_TO_CREATE_PER_THREAD; i++) {
         char path[FILE_NAME_MAX_LEN] = {'/'};
         sprintf(path + 1, "%d", file + i);
-        
+
         // Create the file
         int f = tfs_open(path, TFS_O_CREAT);
         assert(f != -1);
@@ -31,7 +31,7 @@ void *create_file(void* args) {
         // Create the hard link patb
         char link_path[FILE_NAME_MAX_LEN] = "/l";
         sprintf(link_path + 2, "%d", file + i);
-        
+
         // Create the hard link to the file
         assert(tfs_link(path, link_path) != -1);
     }
@@ -46,7 +46,7 @@ int main() {
 
     // Create indexes from where the name of the file is going to be called
     for (int i = 0; i < NUM_THREADS; i++) {
-        table[i] = i * FILE_TO_CREATE_PER_THREAD +1;
+        table[i] = i * FILE_TO_CREATE_PER_THREAD + 1;
     }
 
     // Create 2 threads that will, together, create 10 files
@@ -62,7 +62,7 @@ int main() {
             return -1;
         }
     }
-    
+
     // Open the files and check if the content is correct
     for (int i = 0; i < NUM_THREADS * FILE_TO_CREATE_PER_THREAD; i++) {
         char path[FILE_NAME_MAX_LEN] = {'/'};

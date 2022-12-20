@@ -13,4 +13,4 @@ void mutex_unlock(pthread_mutex_t *mutex);
 void mutex_init(pthread_mutex_t *mutex);
 void mutex_destroy(pthread_mutex_t *mutex);
 
-#endif 
+#endif

@@ -47,8 +47,6 @@ void write_contents(char const *path) {
     assert(tfs_close(f) != -1);
 }
 
-
-
 int main() {
     assert(tfs_init(NULL) != -1);
 
@@ -58,9 +56,9 @@ int main() {
     assert(tfs_close(f) != -1);
 
     // sanity check
-    assert_empty_file(target_path1);   
+    assert_empty_file(target_path1);
 
-    //writes to the file
+    // writes to the file
     write_contents(target_path1);
     assert_contents_ok(target_path1);
 

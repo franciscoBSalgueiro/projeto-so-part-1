@@ -458,7 +458,8 @@ int find_in_dir(inode_t const *inode, char const *sub_name) {
     // Iterates over the directory entries looking for one that has the target
     // name
     for (int i = 0; i < MAX_DIR_ENTRIES; i++) {
-        if ((dir_entry[i].d_inumber != -1) && (strncmp(dir_entry[i].d_name, sub_name, MAX_FILE_NAME) == 0)) {
+        if ((dir_entry[i].d_inumber != -1) &&
+            (strncmp(dir_entry[i].d_name, sub_name, MAX_FILE_NAME) == 0)) {
             int sub_inumber = dir_entry[i].d_inumber;
 
             rwlock_unlock(&inode_table_locker[ROOT_DIR_INUM]);
@@ -487,7 +488,7 @@ int data_block_alloc(void) {
             insert_delay(); // simulate storage access delay to free_blocks
         }
 
-         if (free_blocks[i] == FREE) {
+        if (free_blocks[i] == FREE) {
             rwlock_unlock(&data_block_locker);
             rwlock_writelock(&data_block_locker);
             if (free_blocks[i] == FREE) {

@@ -1,9 +1,9 @@
 #define _GNU_SOURCE
+#include "betterassert.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <utils.h>
-#include "betterassert.h"
 
 void rwlock_writelock(pthread_rwlock_t *lock) {
     if (pthread_rwlock_wrlock(lock) != 0) {
