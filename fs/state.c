@@ -587,7 +587,14 @@ void remove_from_open_file_table(int fhandle) {
     mutex_unlock(&open_file_mutex);
 }
 
-// Checks if a file from a given inode is open
+
+
+/**
+ * Checks if a file from a given inode is open
+ *
+ * Input:
+ *   - inumber: inode number of the file to check
+ */
 int inumber_is_open(int inumber) {
     mutex_lock(&open_file_mutex);
     for (int i = 0; i < MAX_OPEN_FILES; i++) {

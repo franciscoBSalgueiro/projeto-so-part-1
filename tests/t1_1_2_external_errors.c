@@ -19,7 +19,8 @@ int main() {
     // Scenario 1: source file does not exist
     assert(tfs_copy_from_external_fs("./unexistent", path1) == -1);
 
-    // TODO: add more failure scenarios
+    // Scenario 2: destination path is invalid
+    assert(tfs_copy_from_external_fs("./empty_file", "\\invalid_windows") == -1);
 
     PRINT_GREEN("Successful test.\n");
 

@@ -69,7 +69,6 @@ static bool valid_pathname(char const *name) {
  * Returns the inumber of the file, -1 if unsuccessful.
  */
 static int tfs_lookup(char const *name) {
-    // TODO: assert that root_inode is the root directory
     if (!valid_pathname(name)) {
         return -1;
     }
@@ -379,7 +378,7 @@ int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
         return -1;
     }
 
-    // Checks if the  destination path name is valid
+    // Checks if the destination path name is valid
     int dest_file = tfs_open(dest_path, TFS_O_CREAT | TFS_O_TRUNC);
     if (dest_file == -1) {
         return -1;
