@@ -13,7 +13,6 @@
 uint8_t const file_contents[] = "AAA!";
 const char path[] = "/f1";
 
-
 void *read_file(void* args)
 {
     (void) args;
@@ -22,7 +21,7 @@ void *read_file(void* args)
 
     uint8_t buffer[sizeof(file_contents)];
     assert(tfs_read(f, buffer, sizeof(buffer)) == sizeof(buffer));
-    assert(memcmp(buffer, file_contents, sizeof(buffer)) == 0);
+    assert(strncmp((char*) buffer, (char*) file_contents, sizeof(buffer)) == 0);
 
     assert(tfs_close(f) != -1);
     return NULL;
@@ -43,6 +42,10 @@ int main() {
 
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_create(&threads[i], NULL, read_file, NULL);
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
     }
 
     tfs_destroy();
