@@ -551,6 +551,8 @@ void *data_block_get(int block_number) {
 int add_to_open_file_table(int inumber, size_t offset) {
     mutex_lock(&open_file_mutex);
     for (int i = 0; i < MAX_OPEN_FILES; i++) {
+
+        // If the entry is free, mark it as taken
         if (free_open_file_entries[i] == FREE) {
             free_open_file_entries[i] = TAKEN;
             mutex_lock(&open_file_table[i].lock);
@@ -584,11 +586,15 @@ void remove_from_open_file_table(int fhandle) {
     mutex_unlock(&open_file_mutex);
 }
 
+// Checks if a file from a given inode is open
 int inumber_is_open(int inumber) {
     mutex_lock(&open_file_mutex);
     for (int i = 0; i < MAX_OPEN_FILES; i++) {
+        // Checks if a file is open
         if (free_open_file_entries[i] == TAKEN) {
             mutex_lock(&open_file_table[i].lock);
+
+            // Checks if the file is the one we are looking for
             if (open_file_table[i].of_inumber == inumber) {
                 mutex_unlock(&open_file_table[i].lock);
                 mutex_unlock(&open_file_mutex);

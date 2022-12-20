@@ -13,12 +13,15 @@ char const target_path[] = "/file";
 int main() {
     assert(tfs_init(NULL) != -1);
 
+    // creates a file and opens it
     int f = tfs_open(target_path, TFS_O_CREAT);
     assert(f != -1);
 
-    assert(tfs_close(f) != -1);
-
+    // Tries to delete the file, and fails because it's open
     assert(tfs_unlink(target_path) == -1);
+
+    // Closes the file
+    assert(tfs_close(f) != -1);
 
     PRINT_GREEN("Successful test.\n");
     return 0;

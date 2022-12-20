@@ -25,6 +25,7 @@ void assert_contents_ok(char const *path) {
     assert(tfs_close(f) != -1);
 }
 
+// asserts that the file is empty
 void assert_empty_file(char const *path) {
     int f = tfs_open(path, 0);
     assert(f != -1);
@@ -35,6 +36,7 @@ void assert_empty_file(char const *path) {
     assert(tfs_close(f) != -1);
 }
 
+// writes the contents to the file
 void write_contents(char const *path) {
     int f = tfs_open(path, 0);
     assert(f != -1);
