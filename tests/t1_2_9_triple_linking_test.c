@@ -72,7 +72,7 @@ int main() {
     assert(tfs_link(link_path1, link_path2) != -1);
     assert_contents_ok(link_path2);
 
-    // creates a soft link to thre previous hard link
+    // creates a soft link to the previous hard link
     assert(tfs_sym_link(link_path2, link_path3) != -1);
     assert_contents_ok(link_path3);
 
