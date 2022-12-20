@@ -328,6 +328,7 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len) {
     }
 
     pthread_mutex_unlock(&tfs_open_mutex);
+
     return (ssize_t)to_read;
 }
 
@@ -372,11 +373,13 @@ int tfs_unlink(char const *target) {
 }
 
 int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
+    // Checks if the source path name is valid
     FILE *src_file = fopen(source_path, "r");
     if (src_file == NULL) {
         return -1;
     }
 
+    // Checks if the  destination path name is valid
     int dest_file = tfs_open(dest_path, TFS_O_CREAT | TFS_O_TRUNC);
     if (dest_file == -1) {
         return -1;
@@ -385,6 +388,7 @@ int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
     char buffer[state_block_size()];
     size_t read_bytes;
 
+    // Read from the source file and write to the destination file
     while ((read_bytes = fread(buffer, 1, state_block_size(), src_file)) > 0) {
         if (tfs_write(dest_file, buffer, read_bytes) != read_bytes) {
             fclose(src_file);
@@ -393,6 +397,7 @@ int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
         }
     }
 
+    // Close the source file and the destination file
     if (fclose(src_file) == EOF) {
         tfs_close(dest_file);
         return -1;

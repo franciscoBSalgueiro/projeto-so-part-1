@@ -83,7 +83,7 @@ int main() {
         assert(tfs_close(f) != -1);
     }
 
-    tfs_destroy();
+    assert(tfs_destroy() != -1);
 
     PRINT_GREEN("Successful test.\n");
 }
