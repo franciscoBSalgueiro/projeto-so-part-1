@@ -1,8 +1,8 @@
 #include "../fs/operations.h"
 #include <assert.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
-#include <pthread.h>
 
 #include "prettyprint.h"
 
@@ -12,7 +12,7 @@
 
 static char *path_src = "tests/file_to_copy_from.txt";
 
-void *copy_from_file(void* args) {
+void *copy_from_file(void *args) {
     int file = *((int *)args);
 
     for (int i = 0; i < FILE_TO_COPY_PER_THREAD; i++) {
@@ -34,10 +34,10 @@ int main() {
 
     // Create indexes from where the name of the file is going to be called
     for (int i = 0; i < NUM_THREADS; i++) {
-        table[i] = i * FILE_TO_COPY_PER_THREAD +1;
+        table[i] = i * FILE_TO_COPY_PER_THREAD + 1;
     }
 
-    // Create 3 threads that will, together, will create 9 files that
+    // Create 3 threads that will, together, create 9 files that
     // copy the content of the file tests/file_to_copy_from.txt
     for (int i = 0; i < NUM_THREADS; i++) {
         if (pthread_create(&threads[i], NULL, copy_from_file, &table[i]) != 0) {
@@ -51,7 +51,7 @@ int main() {
             return -1;
         }
     }
-    
+
     // Check if the content of the files is correct
     for (int i = 0; i < NUM_THREADS * FILE_TO_COPY_PER_THREAD; i++) {
         char path[FILE_NAME_MAX_LEN] = {'/'};
@@ -66,7 +66,6 @@ int main() {
 
         assert(tfs_close(f) != -1);
     }
-    
 
     assert(tfs_destroy() != -1);
 
